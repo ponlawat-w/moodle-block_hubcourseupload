@@ -25,3 +25,19 @@ function block_hubcourseupload_getmaxfilesize()
 
     return $generalmaximum;
 }
+
+function block_hubcourseupload_getroleid()
+{
+    global $DB;
+
+    if (!get_config('block_hubcourseupload', 'allowcapabilitychange')) {
+        return null;
+    }
+
+    $role = $DB->get_record('role', ['shortname' => 'hubcourseupload_user']);
+    if (!$role) {
+        return create_role('Course Uploader', 'hubcourseupload_user', 'User for hub course upload');
+    }
+
+    return $role->id;
+}

@@ -6,6 +6,15 @@ require_once __DIR__ . '/lib.php';
 if ($ADMIN->fulltree) {
 
     $settings->add(
+        new admin_setting_configcheckbox(
+            'block_hubcourseupload/allowcapabilitychange',
+            get_string('settings:allowcapabilitychange', 'block_hubcourseupload'),
+            get_string('settings:allowcapabilitychange_description', 'block_hubcourseupload'),
+            true, true, false
+        )
+    );
+
+    $settings->add(
         new admin_setting_configtext(
             'block_hubcourseupload/maxfilesize',
             get_string('settings:maxfilesize', 'block_hubcourseupload'),

@@ -9,27 +9,83 @@ if (!$courseuploadform->is_submitted()) {
     throw new Exception(get_string('error_filenotuploaded', 'block_hubcourseupload'));
 }
 
-$context = context_user::instance($USER->id);
+$systemcontext = context_system::instance();
+$usercontext = context_user::instance($USER->id);
 
-require_capability('block/hubcourseupload:upload', $context);
+require_capability('block/hubcourseupload:upload', $usercontext);
 
 $courseuploaddata = $courseuploadform->get_data();
 
-$fs = get_file_storage();
-$file = $fs->get_file($context->id, 'user', 'draft', $courseuploaddata->coursefile, '/');
-if (!$file) {
-    throw new Exception(get_string('error_filenotuploaded', 'block_hubcourseupload'));
-}
-
 $filename = restore_controller::get_tempdir_name(0, $USER->id);
-$pathname = $CFG->tempdir . '/backup/' . $filename;
-if (!$courseuploadform->save_file('coursefile', $pathname)) {
+$archivepath = $CFG->tempdir . '/backup/' . $filename;
+if (!$courseuploadform->save_file('coursefile', $archivepath)) {
     throw new Exception(get_string('error_cannotsaveuploadfile', 'block_hubcourseupload'));
 }
 
-$restoreurl = new moodle_url('/backup/restore.php', [
-    'contextid' => context_system::instance()->id,
-    'filename' => $filename
-]);
+$info = backup_general_helper::get_backup_information_from_mbz($archivepath);
+if ($info->type != 'course') {
+    fulldelete($archivepath);
+    throw new Exception(get_string('error_backupisnotcourse', 'block_hubcourseupload'));
+}
 
-redirect($restoreurl);
+raise_memory_limit(MEMORY_EXTRA);
+
+$extractedname = restore_controller::get_tempdir_name($systemcontext->id, $USER->id);
+$extractedpath = $CFG->tempdir . '/backup/' . $extractedname . '/';
+$fb = get_file_packer('application/vnd.moodle.backup');
+if (!$fb->extract_to_pathname($archivepath, $extractedpath, null)) {
+    throw new Exception(get_string('error_cannotextractfile', 'block_hubcourseupload'));
+}
+
+list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'), get_string('restoringcourseshortname', 'backup'));
+$courseid = restore_dbops::create_new_course($fullname, $shortname, 1);
+$coursecontext = context_course::instance($courseid);
+
+if (!has_capability('moodle/restore:restorecourse', $coursecontext)) {
+    $roleid = block_hubcourseupload_getroleid();
+    if (!$roleid) {
+        throw new Exception(get_string('error_cannotgetroleinfo', 'block_hubcourseupload'));
+    }
+
+    role_assign($roleid, $USER->id, $coursecontext->id);
+    assign_capability('moodle/restore:restorecourse', CAP_ALLOW, $roleid, $coursecontext->id, true);
+    $coursecontext->mark_dirty();
+}
+
+$rc = new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
+$rc->set_status(backup::STATUS_AWAITING);
+$rc->get_plan()->execute();
+
+$blocks = backup_general_helper::get_blocks_from_path($extractedpath . '/course');
+
+$rc->destroy();
+
+if (block_hubcourseupload_infoblockenabled()) {
+    $hubcourse = block_hubcourseinfo_gethubcoursefromcourseid($courseid);
+    $hubcourse->demourl = $info->original_wwwroot . '/course/view.php?id=' . $info->original_course_id;
+
+    if ($hubcourse) {
+        $version = new stdClass();
+        $version->id = 0;
+        $version->hubcourseid = $hubcourse->id;
+        $version->moodleversion = $info->moodle_version;
+        $version->description = get_string('initialversion', 'block_hubcourseupload');
+        $version->userid = $USER->id;
+        $version->timeuploaded = time();
+        $version->fileid = 0;
+        $versionid = $DB->insert_record('block_hubcourse_versions', $version);
+
+        $hubcoursecontext = block_hubcourseinfo_getcontextfromhubcourse($hubcourse);
+
+        $courseuploadform->save_stored_file('coursefile', $hubcoursecontext->id,
+            'block_hubcourse', 'course', $versionid, '/');
+
+        $hubcourse->stableversion = $versionid;
+        $DB->update_record('block_hubcourses', $hubcourse);
+    }
+}
+
+fulldelete($extractedpath);
+fulldelete($archivepath);
+
+redirect(new moodle_url('/course/view.php', ['id' => $courseid]));

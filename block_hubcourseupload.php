@@ -30,6 +30,15 @@ class block_hubcourseupload extends block_base
 
     public function get_content()
     {
+        global $USER;
+
+        if (!has_capability('block/hubcourseupload:upload', context_user::instance($USER->id))) {
+            $this->content = new stdClass();
+            $this->content->text = get_string('nocapability', 'block_hubcourseupload');
+            $this->context->footer = '';
+            return $this->content;
+        }
+
         $uploader = new courseupload_form(new moodle_url('/blocks/hubcourseupload/restore.php'));
 
         $html = $uploader->render();
