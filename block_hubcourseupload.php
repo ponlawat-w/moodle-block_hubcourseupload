@@ -34,7 +34,7 @@ class block_hubcourseupload extends block_base
 
         $this->page->requires->jquery();
         $this->page->requires->js(new moodle_url('/blocks/hubcourseupload/script.js'));
-        $this->page->requires->strings_for_js(['coursefilechoose', 'draganddrop'], 'block_hubcourseupload');
+        $this->page->requires->strings_for_js(['coursefilechoose', 'draganddrop', 'pleasewait'], 'block_hubcourseupload');
 
         if (!has_capability('block/hubcourseupload:upload', context_user::instance($USER->id))) {
             $this->content = new stdClass();

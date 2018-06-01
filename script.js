@@ -1,6 +1,7 @@
 require(['jquery'], function($) {
     $(document).ready(function() {
         var $aside = $('aside[data-block="hubcourseupload"]');
+        var $form = $aside.find('form');
         var $filepickercol = $aside.find('*[data-fieldtype="filepicker"]');
         var $filepickerfieldname = $filepickercol.siblings('.col-md-3');
         if ($filepickerfieldname.length) {
@@ -42,6 +43,11 @@ require(['jquery'], function($) {
             } else {
                 $submitbtn.prop('disabled', true);
             }
-        })
+        });
+
+        $form.submit(function() {
+            $submitbtn.val(M.str.block_hubcourseupload.pleasewait);
+            $submitbtn.attr('disabled', true);
+        });
     });
 });

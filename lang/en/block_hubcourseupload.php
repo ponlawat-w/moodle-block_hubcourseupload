@@ -23,10 +23,27 @@ $string['uploadcoursetohub'] = 'Upload Your Course to Hub';
 
 $string['coursefilechoose'] = 'Open file browser…';
 $string['draganddrop'] = 'Or you can also drag and drop your <i>.mbz</i> file here…';
-
 $string['nocapability'] = 'You are now allowed to upload file to hub.';
-
 $string['uploaddescription'] = 'Supported file format: .mbz';
 $string['maxfilesize'] = 'Maximum file size: {$a}MB';
+$string['pleasewait'] = 'Please wait…';
+
+$string['proceedanyway'] = 'Proceed Anyway';
+
+$string['warning_moodleversion'] = '<p><strong>Warning!</strong> Course from your file is originally from newer Moodle version, the demo course on this site might not function correctly.
+<br>Do you want to continue?</p>
+<p><strong>Your Course Moodle Version:</strong> <span class="text-success">{$a->original}</span><br>
+<strong>Moodle Version on this Site:</strong> <span class="text-danger">{$a->current}</span></p>';
+
+$string['warning_pluginversion'] = '<strong>Warning!</strong> Some plugins quired in your course do not match with the ones in this site. This might causes your course to function improperly in current site.
+<br>Please check list below.';
+$string['requiredplugin_name'] = 'Plugin Name';
+$string['requiredplugin_courseversion'] = 'Version from your course';
+$string['requiredplugin_siteversion'] = 'Version in this site';
+$string['requiredplugin_status'] = 'Status';
+$string['requiredplugin_notinstalled'] = 'Not installed in this site';
+$string['requiredplugin_identical'] = 'Identical';
+$string['requiredplugin_siteolder'] = 'This site has an older version';
+$string['requiredplugin_sitenewer'] = 'This site has a newer version';
 
 $string['initialversion'] = 'Initial version';
