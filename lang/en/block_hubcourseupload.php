@@ -35,7 +35,7 @@ $string['warning_moodleversion'] = '<p><strong>Warning!</strong> Course from you
 <p><strong>Your Course Moodle Version:</strong> <span class="text-success">{$a->original}</span><br>
 <strong>Moodle Version on this Site:</strong> <span class="text-danger">{$a->current}</span></p>';
 
-$string['warning_pluginversion'] = '<strong>Warning!</strong> Some plugins quired in your course do not match with the ones in this site. This might causes your course to function improperly in current site.
+$string['warning_pluginversion'] = '<strong>Warning!</strong> Some plugins in your course do not match with the ones in this site. This might causes your course to function improperly in current site.
 <br>Please check list below.';
 $string['requiredplugin_name'] = 'Plugin Name';
 $string['requiredplugin_courseversion'] = 'Version from your course';

@@ -212,8 +212,8 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
                     $DB->insert_record('block_hubcourse_dependencies', $dependency);
                 }
 
-                foreach ($plugins['block'] as $blockname => $version) {
-                    if (in_array($modname, $standardblocks)) {
+                foreach ($plugins['blocks'] as $blockname => $version) {
+                    if (in_array($blockname, $standardblocks)) {
                         continue;
                     }
 
