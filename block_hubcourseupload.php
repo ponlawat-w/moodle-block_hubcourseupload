@@ -6,7 +6,7 @@ class block_hubcourseupload extends block_base
 {
     public function init()
     {
-        $this->title = get_string('pluginname', 'block_hubcourseupload');
+        $this->title = get_string('uploadcoursetohub', 'block_hubcourseupload');
         $this->version = 2018053100;
     }
 
@@ -31,6 +31,10 @@ class block_hubcourseupload extends block_base
     public function get_content()
     {
         global $USER;
+
+        $this->page->requires->jquery();
+        $this->page->requires->js(new moodle_url('/blocks/hubcourseupload/script.js'));
+        $this->page->requires->strings_for_js(['coursefilechoose', 'draganddrop'], 'block_hubcourseupload');
 
         if (!has_capability('block/hubcourseupload:upload', context_user::instance($USER->id))) {
             $this->content = new stdClass();

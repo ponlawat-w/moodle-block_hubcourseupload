@@ -4,6 +4,10 @@ require_once(__DIR__ . '/lib.php');
 require_once(__DIR__ . '/classes/courseupload_form.php');
 require_once(__DIR__ . '/../../backup/util/includes/restore_includes.php');
 
+if (block_hubcourseupload_infoblockenabled()) {
+    require_once(__DIR__ . '/../../blocks/hubcourseinfo/lib.php');
+}
+
 $courseuploadform = new courseupload_form();
 if (!$courseuploadform->is_submitted()) {
     throw new Exception(get_string('error_filenotuploaded', 'block_hubcourseupload'));
@@ -39,53 +43,67 @@ if (!$fb->extract_to_pathname($archivepath, $extractedpath, null)) {
 
 list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'), get_string('restoringcourseshortname', 'backup'));
 $courseid = restore_dbops::create_new_course($fullname, $shortname, 1);
-$coursecontext = context_course::instance($courseid);
+$course = $DB->get_record('course', ['id' => $courseid]);
 
-if (!has_capability('moodle/restore:restorecourse', $coursecontext)) {
-    $roleid = block_hubcourseupload_getroleid();
-    if (!$roleid) {
-        throw new Exception(get_string('error_cannotgetroleinfo', 'block_hubcourseupload'));
+try {
+    $coursecontext = context_course::instance($courseid);
+
+    if (!has_capability('moodle/restore:restorecourse', $coursecontext)) {
+        $roleid = block_hubcourseupload_getroleid();
+        if (!$roleid) {
+            throw new Exception(get_string('error_cannotgetroleinfo', 'block_hubcourseupload'));
+        }
+
+        role_assign($roleid, $USER->id, $coursecontext->id);
+        assign_capability('moodle/restore:restorecourse', CAP_ALLOW, $roleid, $coursecontext->id, true);
+        $coursecontext->mark_dirty();
     }
 
-    role_assign($roleid, $USER->id, $coursecontext->id);
-    assign_capability('moodle/restore:restorecourse', CAP_ALLOW, $roleid, $coursecontext->id, true);
-    $coursecontext->mark_dirty();
-}
+    $rc = new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
+    $rc->set_status(backup::STATUS_AWAITING);
+    $rc->get_plan()->execute();
 
-$rc = new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
-$rc->set_status(backup::STATUS_AWAITING);
-$rc->get_plan()->execute();
+    $blocks = backup_general_helper::get_blocks_from_path($extractedpath . '/course');
 
-$blocks = backup_general_helper::get_blocks_from_path($extractedpath . '/course');
+    $rc->destroy();
 
-$rc->destroy();
+    if (block_hubcourseupload_infoblockenabled()) {
+        $hubcourse = block_hubcourseinfo_gethubcoursefromcourseid($courseid);
+        $hubcourse->demourl = $info->original_wwwroot . '/course/view.php?id=' . $info->original_course_id;
 
-if (block_hubcourseupload_infoblockenabled()) {
-    $hubcourse = block_hubcourseinfo_gethubcoursefromcourseid($courseid);
-    $hubcourse->demourl = $info->original_wwwroot . '/course/view.php?id=' . $info->original_course_id;
+        if ($hubcourse) {
+            $version = new stdClass();
+            $version->id = 0;
+            $version->hubcourseid = $hubcourse->id;
+            $version->moodleversion = $info->moodle_version;
+            $version->description = get_string('initialversion', 'block_hubcourseupload');
+            $version->userid = $USER->id;
+            $version->timeuploaded = time();
+            $version->fileid = 0;
+            $versionid = $DB->insert_record('block_hubcourse_versions', $version);
 
-    if ($hubcourse) {
-        $version = new stdClass();
-        $version->id = 0;
-        $version->hubcourseid = $hubcourse->id;
-        $version->moodleversion = $info->moodle_version;
-        $version->description = get_string('initialversion', 'block_hubcourseupload');
-        $version->userid = $USER->id;
-        $version->timeuploaded = time();
-        $version->fileid = 0;
-        $versionid = $DB->insert_record('block_hubcourse_versions', $version);
+            $hubcoursecontext = block_hubcourseinfo_getcontextfromhubcourse($hubcourse);
 
-        $hubcoursecontext = block_hubcourseinfo_getcontextfromhubcourse($hubcourse);
+            $courseuploadform->save_stored_file('coursefile', $hubcoursecontext->id,
+                'block_hubcourse', 'course', $versionid, '/');
 
-        $courseuploadform->save_stored_file('coursefile', $hubcoursecontext->id,
-            'block_hubcourse', 'course', $versionid, '/');
-
-        $hubcourse->stableversion = $versionid;
-        $DB->update_record('block_hubcourses', $hubcourse);
+            $hubcourse->stableversion = $versionid;
+            $DB->update_record('block_hubcourses', $hubcourse);
+        }
     }
+
+    fulldelete($extractedpath);
+    fulldelete($archivepath);
+
+    redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
+} catch (Exception $ex) {
+    delete_course($courseid);
+    fulldelete($extractedpath);
+    fulldelete($archivepath);
+    throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload'));
+} catch (Error $ex) {
+    delete_course($courseid);
+    fulldelete($extractedpath);
+    fulldelete($archivepath);
+    throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload'));
 }
-
-fulldelete($extractedpath);
-fulldelete($archivepath);
-
-redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
