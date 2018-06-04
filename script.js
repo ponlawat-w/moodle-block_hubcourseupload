@@ -1,23 +1,26 @@
 require(['jquery'], function($) {
     $(document).ready(function() {
-        var $aside = $('aside[data-block="hubcourseupload"]');
+        var boost = (M.cfg.theme === 'boost');
+
+        var $aside = boost ? $('aside[data-block="hubcourseupload"]') : $('div.block.block_hubcourseupload');
+        console.log($aside);
         var $form = $aside.find('form');
         var $filepickercol = $aside.find('*[data-fieldtype="filepicker"]');
         var $filepickerfieldname = $filepickercol.siblings('.col-md-3');
         if ($filepickerfieldname.length) {
             $filepickerfieldname.remove();
             $filepickercol.removeClass('col-md-9').addClass('container-fluid');
+
         }
 
         var $coursefileinput = $aside.find('input[name="coursefile"]');
-
         var $submitcol = $aside.find('*[data-fieldtype="submit"]');
         var $submitcolfieldname = $submitcol.siblings('.col-md-3');
         if ($submitcolfieldname.length) {
             $submitcolfieldname.remove();
             $submitcol.removeClass('col-md-3').addClass('container-fluid');
-        }
 
+        }
         var $submitbtn = $aside.find('input[name="submitbutton"]');
         $submitbtn.prop('disabled', true);
 
