@@ -192,3 +192,18 @@ function block_hubcourseupload_plugininfotable_html($table)
 
     return $htmltable;
 }
+
+function block_hubcourseupload_reduceinfo($info) {
+    $newinfo = new stdClass();
+    $newinfo->type = $info->type;
+    $newinfo->moodle_version = $info->moodle_version;
+    $newinfo->original_wwwroot = $info->original_wwwroot;
+    $newinfo->original_course_id = $info->original_course_id;
+
+    return $newinfo;
+}
+
+function block_hubcourseupload_getbackuppath($filename) {
+    global $CFG;
+    return $CFG->tempdir . '/backup/' . $filename;
+}

@@ -18,6 +18,7 @@ $string['error_backupisnotcourse'] = 'Backup file is not a course backup.';
 $string['error_cannotextractfile'] = 'Cannot extract file.';
 $string['error_cannotgetroleinfo'] = 'Cannot get role <i>block_hubcourseupload</i>, please manually create this role with given short name having permission <i>moodle:restore/restorecourse</i>.';
 $string['error_cannotrestore'] = 'Cannot perform restore execution.';
+$string['error_categorynotfound'] = 'Category not found';
 
 $string['uploadcoursetohub'] = 'Upload Your Course to Hub';
 

@@ -29,12 +29,14 @@ $usercontext = context_user::instance($USER->id);
 require_capability('block/hubcourseupload:upload', $usercontext);
 
 $step = optional_param('step', BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE, PARAM_INT);
+$category = optional_param('category', 0, PARAM_INT);
 
 $versionconfirmformdata = null;
 if ($versionconfirmform->is_submitted()) {
     $versionconfirmformdata = $versionconfirmform->get_jsondata();
     $step = $versionconfirmformdata->step;
     $mbzfilename = $versionconfirmformdata->mbzfilename;
+    $category = $versionconfirmformdata->category;
 }
 
 $pluginconfirmformdata = null;
@@ -42,6 +44,7 @@ if ($pluginconfirmform->is_submitted()) {
     $pluginconfirmformdata = $pluginconfirmform->get_jsondata();
     $step = $pluginconfirmformdata->step;
     $mbzfilename = $pluginconfirmformdata->mbzfilename;
+    $category = $pluginconfirmformdata->category;
 }
 
 if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
@@ -53,8 +56,8 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
     $courseuploaddata = $courseuploadform->get_data();
     $mbzfilename = $courseuploadform->get_new_filename('coursefile');
 
-    $filename = restore_controller::get_tempdir_name(0, $USER->id);
-    $archivepath = $CFG->tempdir . '/backup/' . $filename;
+    $archivename = restore_controller::get_tempdir_name(0, $USER->id);
+    $archivepath = block_hubcourseupload_getbackuppath($archivename);
     if (!$courseuploadform->save_file('coursefile', $archivepath)) {
         throw new Exception(get_string('error_cannotsaveuploadfile', 'block_hubcourseupload'));
     }
@@ -72,10 +75,11 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
         $PAGE->set_heading(get_string('pluginname', 'block_hubcourseupload'));
         echo $OUTPUT->header();
         $versionconfirm = new versionconfirm_form($info->moodle_version, $CFG->version, [
-            'archivepath' => $archivepath,
-            'info' => $info,
+            'archivename' => $archivename,
+            'info' => block_hubcourseupload_reduceinfo($info),
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED,
-            'mbzfilename' => $mbzfilename
+            'mbzfilename' => $mbzfilename,
+            'category' => $category
         ]);
         $versionconfirm->display();
         echo $OUTPUT->footer();
@@ -87,12 +91,13 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
 
 if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
     if ($versionconfirmform->is_submitted()) {
-        $archivepath = $versionconfirmformdata->archivepath;
+        $archivename = $versionconfirmformdata->archivename;
+        $archivepath = block_hubcourseupload_getbackuppath($archivename);
         $info = $versionconfirmformdata->info;
     }
 
     $extractedname = restore_controller::get_tempdir_name($systemcontext->id, $USER->id);
-    $extractedpath = $CFG->tempdir . '/backup/' . $extractedname . '/';
+    $extractedpath = block_hubcourseupload_getbackuppath($extractedname);
     $fb = get_file_packer('application/vnd.moodle.backup');
     if (!$fb->extract_to_pathname($archivepath, $extractedpath, null)) {
         throw new Exception(get_string('error_cannotextractfile', 'block_hubcourseupload'));
@@ -106,13 +111,12 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
         $PAGE->set_heading(get_string('pluginname', 'block_hubcourseupload'));
         echo $OUTPUT->header();
         $pluginconfirmform = new pluginconfirm_form($plugins, [
-            'archivepath' => $archivepath,
-            'info' => $info,
+            'archivename' => $archivename,
+            'info' => block_hubcourseupload_reduceinfo($info),
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED,
             'mbzfilename' => $mbzfilename,
             'extractedname' => $extractedname,
-            'extractedpath' => $extractedpath,
-            'plugins' => $plugins
+            'category' => $category
         ]);
         $pluginconfirmform->display();
         echo $OUTPUT->footer();
@@ -124,18 +128,23 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
 
 if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
     if ($pluginconfirmform->is_submitted()) {
-        $archivepath = $pluginconfirmformdata->archivepath;
+        $archivename = $pluginconfirmformdata->archivename;
+        $archivepath = block_hubcourseupload_getbackuppath($archivename);
         $info = $pluginconfirmformdata->info;
         $extractedname = $pluginconfirmformdata->extractedname;
-        $extractedpath = $pluginconfirmformdata->extractedpath;
-        $plugins = $pluginconfirmformdata->plugins;
+        $extractedpath = block_hubcourseupload_getbackuppath($extractedname);
+        $plugins = block_hubcourseupload_getplugins($extractedpath);
     }
 
-    raise_memory_limit(MEMORY_EXTRA);
+    if (!$DB->get_record('course_categories', ['id' => $category])) {
+        throw new Exception(get_string('error_categorynotfound', 'block_hubcourseupload'));
+    }
 
     list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'), get_string('restoringcourseshortname', 'backup'));
-    $courseid = restore_dbops::create_new_course($fullname, $shortname, 1);
+    $courseid = restore_dbops::create_new_course($fullname, $shortname, $category);
     $course = $DB->get_record('course', ['id' => $courseid]);
+
+    raise_memory_limit(MEMORY_EXTRA);
 
     try {
         $coursecontext = context_course::instance($courseid);
@@ -231,7 +240,12 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
         fulldelete($extractedpath);
         fulldelete($archivepath);
 
-        redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
+        if (block_hubcourseupload_infoblockenabled()) {
+            redirect(new moodle_url('/blocks/hubcourseinfo/metadata/edit.php', ['id' => $hubcourse->id, 'new' => 1]));
+        } else {
+            redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
+        }
+        exit;
     } catch (Exception $ex) {
         delete_course($courseid);
         fulldelete($extractedpath);
