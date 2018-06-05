@@ -168,15 +168,16 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
 
         $rc->destroy();
 
+        $hubcourseid = 0;
         if (block_hubcourseupload_infoblockenabled()) {
-            block_hubcourseinfo_afterrestore($courseid, $info, $mbzfilename, $archivepath, $plugins);
+            $hubcourseid = block_hubcourseinfo_afterrestore($courseid, $info, $mbzfilename, $archivepath, $plugins);
         }
 
         fulldelete($extractedpath);
         fulldelete($archivepath);
 
-        if (block_hubcourseupload_infoblockenabled()) {
-            redirect(new moodle_url('/blocks/hubcourseinfo/metadata/edit.php', ['id' => $hubcourse->id, 'new' => 1]));
+        if (block_hubcourseupload_infoblockenabled() && $hubcourseid) {
+            redirect(new moodle_url('/blocks/hubcourseinfo/metadata/edit.php', ['id' => $hubcourseid, 'new' => 1]));
         } else {
             redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
         }
