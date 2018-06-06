@@ -9,20 +9,6 @@ if (block_hubcourseupload_infoblockenabled()) {
     require_once(__DIR__ . '/../../blocks/hubcourseinfo/lib.php');
 }
 
-$versionconfirmform = new versionconfirm_form();
-$pluginconfirmform = new pluginconfirm_form();
-if ($versionconfirmform->is_cancelled() || $pluginconfirmform->is_cancelled()) {
-    $data = $versionconfirmform->is_submitted() ? $versionconfirmform->get_jsondata() : $pluginconfirmform->get_jsondata();
-    if (isset($data->archivepath)) {
-        fulldelete($data->archivepath);
-    }
-    if (isset($data->extractedpath)) {
-        fulldelete($data->extractedpath);
-    }
-
-    redirect(new moodle_url('/'));
-}
-
 $systemcontext = context_system::instance();
 $usercontext = context_user::instance($USER->id);
 
@@ -31,6 +17,29 @@ require_capability('block/hubcourseupload:upload', $usercontext);
 $step = optional_param('step', BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE, PARAM_INT);
 $category = optional_param('category', 0, PARAM_INT);
 $versionid = optional_param('version', 0, PARAM_INT);
+
+$versionconfirmform = new versionconfirm_form();
+$pluginconfirmform = new pluginconfirm_form();
+if ($versionconfirmform->is_cancelled() || $pluginconfirmform->is_cancelled()) {
+    $dataraw = $versionconfirmform->is_submitted() ? $versionconfirmform->get_submitted_data() : $pluginconfirmform->get_submitted_data();
+    $data = json_decode($dataraw->jsondata);
+
+    if (isset($data->archivename)) {
+        fulldelete(block_hubcourseupload_getbackuppath($data->archivename));
+    }
+    if (isset($data->extractedname)) {
+        fulldelete(block_hubcourseupload_getbackuppath($data->extractedname));
+    }
+
+    if (($data->version && block_hubcourseupload_infoblockenabled())) {
+        $version = $DB->get_record('block_hubcourse_versions', ['id' => $data->version]);
+        redirect(new moodle_url('/blocks/hubcourseinfo/manage.php', ['id' => $version->hubcourseid]));
+    } else {
+        redirect(new moodle_url('/'));
+    }
+
+    exit;
+}
 
 $versionconfirmformdata = null;
 if ($versionconfirmform->is_submitted()) {
@@ -232,6 +241,8 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
             $DB->update_record('block_hubcourses', $hubcourse);
 
             $hubcourseid = $hubcourse->id;
+
+            block_hubcourseinfo_enableguestunrol($courseid);
         } else {
             // New course
             $hubcourseid = 0;
