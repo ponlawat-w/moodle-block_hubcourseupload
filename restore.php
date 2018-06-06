@@ -30,6 +30,7 @@ require_capability('block/hubcourseupload:upload', $usercontext);
 
 $step = optional_param('step', BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE, PARAM_INT);
 $category = optional_param('category', 0, PARAM_INT);
+$versionid = optional_param('version', 0, PARAM_INT);
 
 $versionconfirmformdata = null;
 if ($versionconfirmform->is_submitted()) {
@@ -37,6 +38,7 @@ if ($versionconfirmform->is_submitted()) {
     $step = $versionconfirmformdata->step;
     $mbzfilename = $versionconfirmformdata->mbzfilename;
     $category = $versionconfirmformdata->category;
+    $versionid = $versionconfirmformdata->version;
 }
 
 $pluginconfirmformdata = null;
@@ -45,21 +47,58 @@ if ($pluginconfirmform->is_submitted()) {
     $step = $pluginconfirmformdata->step;
     $mbzfilename = $pluginconfirmformdata->mbzfilename;
     $category = $pluginconfirmformdata->category;
+    $versionid = $pluginconfirmformdata->version;
+}
+
+if ($versionid && block_hubcourseupload_infoblockenabled()) {
+    $version = $DB->get_record('block_hubcourse_versions', ['id' => $versionid]);
+    if (!$version) {
+        throw new Exception();
+    }
+
+    $hubcoursecontext = block_hubcourseinfo_getcontextfromversion($version);
+
+    require_capability('block/hubcourseinfo:managecourse', $hubcoursecontext);
 }
 
 if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
     $courseuploadform = new courseupload_form();
-    if (!$courseuploadform->is_submitted()) {
+    if ($courseuploadform->is_submitted()) {
+        // Upload new course
+
+        $courseuploaddata = $courseuploadform->get_data();
+        $mbzfilename = $courseuploadform->get_new_filename('coursefile');
+
+        $archivename = restore_controller::get_tempdir_name(0, $USER->id);
+        $archivepath = block_hubcourseupload_getbackuppath($archivename);
+        if (!$courseuploadform->save_file('coursefile', $archivepath)) {
+            throw new Exception(get_string('error_cannotsaveuploadfile', 'block_hubcourseupload'));
+        }
+
+    } else if ($versionid && block_hubcourseupload_infoblockenabled()) {
+        // Apply version
+        if (!isset($fs) || !$fs) {
+            $fs = get_file_storage();
+        }
+
+        $archivefile = null;
+        $files = $fs->get_area_files($hubcoursecontext->id, 'block_hubcourse', 'course', $version->id);
+        foreach ($files as $file) {
+            if ($file->get_mimetype() == 'application/vnd.moodle.backup') {
+                $archivefile = $file;
+                break;
+            }
+        }
+        if (!$archivefile) {
+            throw new Exception('error');
+        }
+
+        $archivename = restore_controller::get_tempdir_name(0, $USER->id);
+        $archivepath = block_hubcourseupload_getbackuppath($archivename);
+        $archivefile->copy_content_to($archivepath);
+
+    } else {
         throw new Exception(get_string('error_filenotuploaded', 'block_hubcourseupload'));
-    }
-
-    $courseuploaddata = $courseuploadform->get_data();
-    $mbzfilename = $courseuploadform->get_new_filename('coursefile');
-
-    $archivename = restore_controller::get_tempdir_name(0, $USER->id);
-    $archivepath = block_hubcourseupload_getbackuppath($archivename);
-    if (!$courseuploadform->save_file('coursefile', $archivepath)) {
-        throw new Exception(get_string('error_cannotsaveuploadfile', 'block_hubcourseupload'));
     }
 
     $info = backup_general_helper::get_backup_information_from_mbz($archivepath);
@@ -79,7 +118,8 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
             'info' => block_hubcourseupload_reduceinfo($info),
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED,
             'mbzfilename' => $mbzfilename,
-            'category' => $category
+            'category' => $category,
+            'version' => $versionid
         ]);
         $versionconfirm->display();
         echo $OUTPUT->footer();
@@ -116,7 +156,8 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED,
             'mbzfilename' => $mbzfilename,
             'extractedname' => $extractedname,
-            'category' => $category
+            'category' => $category,
+            'version' => $versionid
         ]);
         $pluginconfirmform->display();
         echo $OUTPUT->footer();
@@ -136,12 +177,21 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
         $plugins = block_hubcourseupload_getplugins($extractedpath);
     }
 
-    if (!$DB->get_record('course_categories', ['id' => $category])) {
-        throw new Exception(get_string('error_categorynotfound', 'block_hubcourseupload'));
+    if ($version && block_hubcourseupload_infoblockenabled()) {
+        // Apply Version
+
+        $coursecontext = $hubcoursecontext->get_course_context();
+        $courseid = $coursecontext->instanceid;
+    } else {
+        // New Course
+        if (!$DB->get_record('course_categories', ['id' => $category])) {
+            throw new Exception(get_string('error_categorynotfound', 'block_hubcourseupload'));
+        }
+
+        list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'), get_string('restoringcourseshortname', 'backup'));
+        $courseid = restore_dbops::create_new_course($fullname, $shortname, $category);
     }
 
-    list($fullname, $shortname) = restore_dbops::calculate_course_names(0, get_string('restoringcourse', 'backup'), get_string('restoringcourseshortname', 'backup'));
-    $courseid = restore_dbops::create_new_course($fullname, $shortname, $category);
     $course = $DB->get_record('course', ['id' => $courseid]);
 
     raise_memory_limit(MEMORY_EXTRA);
@@ -160,7 +210,13 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
             $coursecontext->mark_dirty();
         }
 
-        $rc = new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
+        if ($versionid && block_hubcourseupload_infoblockenabled()) {
+            block_hubcourseinfo_clearcontents($course);
+        }
+
+        $rc = ($versionid && block_hubcourseupload_infoblockenabled()) ?
+            new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_EXISTING_DELETING) :
+            new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
         $rc->set_status(backup::STATUS_AWAITING);
         $rc->get_plan()->execute();
 
@@ -168,27 +224,42 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
 
         $rc->destroy();
 
-        $hubcourseid = 0;
-        if (block_hubcourseupload_infoblockenabled()) {
-            $hubcourseid = block_hubcourseinfo_afterrestore($courseid, $info, $mbzfilename, $archivepath, $plugins);
+        if ($versionid && block_hubcourseupload_infoblockenabled()) {
+            // Apply version
+            $hubcourse = block_hubcourseinfo_gethubcoursefromcourseid($courseid);
+            $hubcourse->stableversion = $version->id;
+            $hubcourse->timemodified = time();
+            $DB->update_record('block_hubcourses', $hubcourse);
+
+            $hubcourseid = $hubcourse->id;
+        } else {
+            // New course
+            $hubcourseid = 0;
+            if (block_hubcourseupload_infoblockenabled()) {
+                $hubcourseid = block_hubcourseinfo_afterrestore($courseid, $info, $mbzfilename, $archivepath, $plugins);
+            }
         }
 
         fulldelete($extractedpath);
         fulldelete($archivepath);
 
-        if (block_hubcourseupload_infoblockenabled() && $hubcourseid) {
+        if (block_hubcourseupload_infoblockenabled() && $hubcourseid && !$versionid) {
             redirect(new moodle_url('/blocks/hubcourseinfo/metadata/edit.php', ['id' => $hubcourseid, 'new' => 1]));
         } else {
             redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
         }
         exit;
     } catch (Exception $ex) {
-        delete_course($courseid);
+        if (!$versionid) {
+            delete_course($courseid);
+        }
         fulldelete($extractedpath);
         fulldelete($archivepath);
         throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload') . $ex->getMessage());
     } catch (Error $ex) {
-        delete_course($courseid);
+        if (!$versionid) {
+            delete_course($courseid);
+        }
         fulldelete($extractedpath);
         fulldelete($archivepath);
         throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload') . $ex->getMessage());
