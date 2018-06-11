@@ -15,7 +15,6 @@ $usercontext = context_user::instance($USER->id);
 require_capability('block/hubcourseupload:upload', $usercontext);
 
 $step = optional_param('step', BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE, PARAM_INT);
-$category = optional_param('category', 0, PARAM_INT);
 $versionid = optional_param('version', 0, PARAM_INT);
 
 $versionconfirmform = new versionconfirm_form();
@@ -46,7 +45,6 @@ if ($versionconfirmform->is_submitted()) {
     $versionconfirmformdata = $versionconfirmform->get_jsondata();
     $step = $versionconfirmformdata->step;
     $mbzfilename = $versionconfirmformdata->mbzfilename;
-    $category = $versionconfirmformdata->category;
     $versionid = $versionconfirmformdata->version;
 }
 
@@ -55,7 +53,6 @@ if ($pluginconfirmform->is_submitted()) {
     $pluginconfirmformdata = $pluginconfirmform->get_jsondata();
     $step = $pluginconfirmformdata->step;
     $mbzfilename = $pluginconfirmformdata->mbzfilename;
-    $category = $pluginconfirmformdata->category;
     $versionid = $pluginconfirmformdata->version;
 }
 
@@ -127,7 +124,6 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
             'info' => block_hubcourseupload_reduceinfo($info),
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED,
             'mbzfilename' => $mbzfilename,
-            'category' => $category,
             'version' => $versionid
         ]);
         $versionconfirm->display();
@@ -165,7 +161,6 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED,
             'mbzfilename' => $mbzfilename,
             'extractedname' => $extractedname,
-            'category' => $category,
             'version' => $versionid
         ]);
         $pluginconfirmform->display();
@@ -188,11 +183,12 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
 
     if ($version && block_hubcourseupload_infoblockenabled()) {
         // Apply Version
-
         $coursecontext = $hubcoursecontext->get_course_context();
         $courseid = $coursecontext->instanceid;
     } else {
         // New Course
+        $category = get_config('block_hubcourseupload', 'defaultcategory');
+
         if (!$DB->get_record('course_categories', ['id' => $category])) {
             throw new Exception(get_string('error_categorynotfound', 'block_hubcourseupload'));
         }
@@ -242,7 +238,7 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
 
             $hubcourseid = $hubcourse->id;
 
-            block_hubcourseinfo_enableguestunrol($courseid);
+            block_hubcourseinfo_enableguestenrol($courseid);
         } else {
             // New course
             $hubcourseid = 0;

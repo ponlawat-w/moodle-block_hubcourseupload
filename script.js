@@ -1,9 +1,9 @@
-require(['jquery'], function($) {
-    $(document).ready(function() {
+require(['jquery'], function ($) {
+    $(document).ready(function () {
         var boost = (M.cfg.theme === 'boost');
 
         var $aside = boost ? $('aside[data-block="hubcourseupload"]') : $('div.block.block_hubcourseupload');
-        console.log($aside);
+
         var $form = $aside.find('form');
         var $filepickercol = $aside.find('*[data-fieldtype="filepicker"]');
         var $filepickerfieldname = $filepickercol.siblings('.col-md-3');
@@ -29,6 +29,16 @@ require(['jquery'], function($) {
             M.str.block_hubcourseupload.draganddrop + '<br><div class="dndupload-arrow"></div>'
         );
 
+        var $container = $aside.find('.filepicker-container');
+        if ($container.length) {
+            $container.css('padding-top', '55px');
+        }
+
+        var $arrow = $aside.find('.dndupload-arrow');
+        if ($arrow.length) {
+            $arrow.css('height', '50px');
+        }
+
         var $filetypedescription = $aside.find('.form-filetypes-descriptions');
         if ($filetypedescription.length) {
             var $siblingp = $filetypedescription.siblings('p');
@@ -36,11 +46,23 @@ require(['jquery'], function($) {
                 $siblingp.append(' ');
                 $siblingp.append($filetypedescription);
                 $filetypedescription.css('display', 'inline-block');
-                $filetypedescription.find('li').css('display', 'inline');
+                var $filetypelis = $filetypedescription.find('li');
+                for (var i = 0; i < $filetypelis.length; i++) {
+                    var $filetypeli = $($filetypelis[i]);
+                    $filetypeli.css('display', 'inline');
+
+                    var $filetypesmall = $filetypeli.find('small');
+                    $filetypeli.append('(' + $filetypesmall.html() + ')');
+                    $filetypesmall.remove();
+                }
             }
+
+            var $parentp = $filetypedescription.parent('p:not(div)');
+            $parentp.css('font-weight', 'bold');
+            $parentp.find('div').css('font-weight', 'normal');
         }
 
-        $coursefileinput.change(function() {
+        $coursefileinput.change(function () {
             if ($coursefileinput.val()) {
                 $submitbtn.prop('disabled', false);
             } else {
@@ -48,7 +70,7 @@ require(['jquery'], function($) {
             }
         });
 
-        $form.submit(function() {
+        $form.submit(function () {
             $submitbtn.val(M.str.block_hubcourseupload.pleasewait);
             $submitbtn.attr('disabled', true);
         });

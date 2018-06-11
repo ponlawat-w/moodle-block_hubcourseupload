@@ -7,8 +7,12 @@ $string['hubcourseupload:upload'] = 'Upload a course to web';
 
 $string['settings:allowcapabilitychange'] = 'Allow overwriting default capability';
 $string['settings:allowcapabilitychange_description'] = 'If checked, capability <i>moodle/restore:restorecourse</i> will be granted to general authorized users.';
+$string['settings:autoenableguestenrol'] = 'Auto enable guest enrolment';
+$string['settings:autoenableguestenrol_description'] = 'Enable guest enrolment method automatically after course is uploaded';
 $string['settings:maxfilesize'] = 'Maximum course file size (MB)';
 $string['settings:maxfilesize_description'] = 'Maximum course backup size per file in megabytes (MB)<br><small>*Actual maximum upload size might be limited by server settings in <i>php.ini</i> file.</small>';
+$string['settings:defaultcategory'] = 'Default category';
+$string['settings:defaultcategory_description'] = 'Default category of newly uploaded course';
 $string['settings:autocreateinfoblock'] = 'Create course info block after uploaded';
 $string['settings:autocreateinfoblock_decription'] = 'Automatically create a hub course info block instance to uploaded course.';
 
