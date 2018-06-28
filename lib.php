@@ -197,6 +197,7 @@ function block_hubcourseupload_reduceinfo($info) {
     $newinfo = new stdClass();
     $newinfo->type = $info->type;
     $newinfo->moodle_version = $info->moodle_version;
+    $newinfo->moodle_release = $info->moodle_release;
     $newinfo->original_wwwroot = $info->original_wwwroot;
     $newinfo->original_course_id = $info->original_course_id;
 

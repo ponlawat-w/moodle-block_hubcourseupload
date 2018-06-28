@@ -119,7 +119,9 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
         $PAGE->set_title(get_string('pluginname', 'block_hubcourseupload'));
         $PAGE->set_heading(get_string('pluginname', 'block_hubcourseupload'));
         echo $OUTPUT->header();
-        $versionconfirm = new versionconfirm_form($info->moodle_version, $CFG->version, [
+        $versionconfirm = new versionconfirm_form(
+            "{$info->moodle_version} - {$info->moodle_release}",
+            "{$CFG->version} - {$CFG->release}", [
             'archivename' => $archivename,
             'info' => block_hubcourseupload_reduceinfo($info),
             'step' => BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED,
