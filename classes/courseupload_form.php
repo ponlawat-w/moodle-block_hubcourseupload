@@ -14,6 +14,6 @@ class courseupload_form extends moodleform
 
         $form->addElement('html', get_string('maxfilesize', 'block_hubcourseupload', $maxsize / 1024 / 1024));
 
-        $this->add_action_buttons(false, get_string('continue'));
+        $this->add_action_buttons(false, get_string('continueupload', 'block_hubcourseupload'));
     }
 }

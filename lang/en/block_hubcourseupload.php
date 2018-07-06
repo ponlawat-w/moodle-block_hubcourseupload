@@ -33,6 +33,8 @@ $string['uploaddescription'] = 'Supported file format: .mbz';
 $string['maxfilesize'] = 'Maximum file size: {$a}MB';
 $string['pleasewait'] = 'Please wait…';
 
+$string['continueupload'] = 'Continue Upload';
+
 $string['proceedanyway'] = 'Proceed Anyway';
 
 $string['warning_moodleversion'] = '<p><strong>Warning!</strong> Course from your file is originally from newer Moodle version, the demo course on this site might not function correctly.
