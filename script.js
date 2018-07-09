@@ -22,7 +22,7 @@ require(['jquery'], function ($) {
 
         }
         var $submitbtn = $aside.find('input[name="submitbutton"]');
-        $submitbtn.prop('disabled', true);
+        $submitbtn.hide();
 
         $filepickercol.find('input[name="coursefilechoose"]').val(M.str.block_hubcourseupload.coursefilechoose);
         $filepickercol.find('.dndupload-message').html(
@@ -64,9 +64,9 @@ require(['jquery'], function ($) {
 
         $coursefileinput.change(function () {
             if ($coursefileinput.val()) {
-                $submitbtn.prop('disabled', false);
+                $submitbtn.show();
             } else {
-                $submitbtn.prop('disabled', true);
+                $submitbtn.hide();
             }
         });
 

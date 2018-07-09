@@ -7,7 +7,7 @@ class block_hubcourseupload extends block_base
     public function init()
     {
         $this->title = get_string('uploadcoursetohub', 'block_hubcourseupload');
-        $this->version = 2018070600;
+        $this->version = 2018070900;
     }
 
     public function has_config()

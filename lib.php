@@ -173,7 +173,7 @@ function block_hubcourseupload_plugininfotable_html($table)
             $style = 'danger';
         } else if ($versiondata['siteversion'] == $versiondata['courseversion']) {
             $text = get_string('requiredplugin_identical', 'block_hubcourseupload');
-            $style = 'primary';
+            $style = 'success';
         } else if ($versiondata['siteversion'] < $versiondata['courseversion']) {
             $text = get_string('requiredplugin_siteolder', 'block_hubcourseupload');
             $style = 'warning';
