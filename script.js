@@ -62,6 +62,10 @@ require(['jquery'], function ($) {
             $parentp.find('div').css('font-weight', 'normal');
         }
 
+        if (!boost) {
+            $aside.find('div[data-fieldtype="filepicker"]').css('margin-left', '0');
+        }
+
         $coursefileinput.change(function () {
             if ($coursefileinput.val()) {
                 $submitbtn.show();
