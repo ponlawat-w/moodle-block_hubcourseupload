@@ -1,10 +1,41 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Functions libraries
+ *
+ * @package block_hubcourseupload
+ * @copyright 2018 Moodle Association of Japan
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+// Step of extracting file information
 const BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE = 0;
+
+// Step of when there is no site version difference, or the difference has been accepted
 const BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED = 1;
+
+// Step of when there is no plugin version difference, or the difference has been accepted
 const BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED = 2;
 
-function block_hubcourseupload_infoblockenabled()
-{
+/**
+ * Check if block_hubcourseinfo is enabled in this site
+ * @return bool
+ */
+function block_hubcourseupload_infoblockenabled() {
     global $BLOCK_HUBCOURSEUPLOAD_INFOENABLED;
 
     if (!isset($BLOCK_HUBCOURSEUPLOAD_INFOENABLED)) {
@@ -15,8 +46,12 @@ function block_hubcourseupload_infoblockenabled()
     return $BLOCK_HUBCOURSEUPLOAD_INFOENABLED;
 }
 
-function block_hubcourseupload_getmaxfilesize()
-{
+/**
+ * Get maximum file size
+ * @return float|int
+ * @throws dml_exception
+ */
+function block_hubcourseupload_getmaxfilesize() {
     $generalmaximum = get_max_upload_file_size();
 
     if (block_hubcourseupload_infoblockenabled()) {
@@ -30,8 +65,13 @@ function block_hubcourseupload_getmaxfilesize()
     return $generalmaximum;
 }
 
-function block_hubcourseupload_getroleid()
-{
+/**
+ * Get role ID
+ * @return int|null
+ * @throws coding_exception
+ * @throws dml_exception
+ */
+function block_hubcourseupload_getroleid() {
     global $DB;
 
     if (!get_config('block_hubcourseupload', 'allowcapabilitychange')) {
@@ -46,8 +86,12 @@ function block_hubcourseupload_getroleid()
     return $role->id;
 }
 
-function block_hubcourseupload_getsubdirectories($path)
-{
+/**
+ * Get sub-directories of given path
+ * @param string $path
+ * @return string[]
+ */
+function block_hubcourseupload_getsubdirectories($path) {
     if (!is_dir($path)) {
         return [];
     }
@@ -71,8 +115,12 @@ function block_hubcourseupload_getsubdirectories($path)
     return $dirs;
 }
 
-function block_hubcourseupload_getplugins($extractedpath)
-{
+/**
+ * Get plugins information from extracted path
+ * @param string $extractedpath
+ * @return array
+ */
+function block_hubcourseupload_getplugins($extractedpath) {
     $result = [
         'mod' => [],
         'blocks' => []
@@ -111,8 +159,12 @@ function block_hubcourseupload_getplugins($extractedpath)
     return $result;
 }
 
-function block_hubcourseupload_valid($plugins)
-{
+/**
+ * Check if all plugin dependencies indicated in mbz file is valid in this site
+ * @param array $plugins
+ * @return bool
+ */
+function block_hubcourseupload_valid($plugins) {
     $installedmods = core_plugin_manager::instance()->get_plugins_of_type('mod');
     foreach ($plugins['mod'] as $modname => $version) {
         if (!isset($installedmods[$modname]) || $installedmods[$modname]->versiondb != $version) {
@@ -130,8 +182,12 @@ function block_hubcourseupload_valid($plugins)
     return true;
 }
 
-function block_hubcourseupload_plugininfotable($plugins)
-{
+/**
+ * Create table array informing plugin difference data
+ * @param array $plugins
+ * @return array
+ */
+function block_hubcourseupload_plugininfotable($plugins) {
     //table[pluginname] = [courseversion=>?, siteversion=?]
     $table = [];
 
@@ -155,8 +211,13 @@ function block_hubcourseupload_plugininfotable($plugins)
     return $table;
 }
 
-function block_hubcourseupload_plugininfotable_html($table)
-{
+/**
+ * Get HTML table from table array for page rendering
+ * @param array $table
+ * @return html_table
+ * @throws coding_exception
+ */
+function block_hubcourseupload_plugininfotable_html($table) {
     $htmltable = new html_table();
     $htmltable->head = [
         get_string('requiredplugin_name', 'block_hubcourseupload'),
@@ -193,6 +254,11 @@ function block_hubcourseupload_plugininfotable_html($table)
     return $htmltable;
 }
 
+/**
+ * Reduce info object by removing unnecessary
+ * @param stdClass $info
+ * @return stdClass
+ */
 function block_hubcourseupload_reduceinfo($info) {
     $newinfo = new stdClass();
     $newinfo->type = $info->type;
@@ -204,6 +270,11 @@ function block_hubcourseupload_reduceinfo($info) {
     return $newinfo;
 }
 
+/**
+ * Get backup path
+ * @param string $filename
+ * @return string
+ */
 function block_hubcourseupload_getbackuppath($filename) {
     global $CFG;
     return $CFG->tempdir . '/backup/' . $filename;

@@ -1,35 +1,76 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * block_hubcourseupload class
+ *
+ * @package block_hubcourseupload
+ * @copyright 2018 Moodle Association of Japan
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
 require_once __DIR__ . '/lib.php';
 require_once __DIR__ . '/classes/courseupload_form.php';
 
-class block_hubcourseupload extends block_base
-{
-    public function init()
-    {
+/**
+ * Class block_hubcourseupload
+ * @package block_hubcourseupload
+ */
+class block_hubcourseupload extends block_base {
+
+    /**
+     * Block initialization
+     * @throws coding_exception
+     */
+    public function init() {
         $this->title = get_string('uploadcoursetohub', 'block_hubcourseupload');
         $this->version = 2018070900;
     }
 
-    public function has_config()
-    {
+    /**
+     * @return bool
+     */
+    public function has_config() {
         return true;
     }
 
-    public function instance_can_be_hidden()
-    {
+    /**
+     * @return bool
+     */
+    public function instance_can_be_hidden() {
         return false;
     }
 
-    public function applicable_formats()
-    {
+    /**
+     * @return array
+     */
+    public function applicable_formats() {
         return array(
             'all' => false,
             'my' => true
         );
     }
 
-    public function get_content()
-    {
+    /**
+     * Fetch block content
+     * @return stdClass
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    public function get_content() {
         global $USER;
 
         $this->page->requires->jquery();
@@ -54,8 +95,10 @@ class block_hubcourseupload extends block_base
         return $this->content;
     }
 
-    public function get_aria_role()
-    {
+    /**
+     * @return string
+     */
+    public function get_aria_role() {
         return 'application';
     }
 }
