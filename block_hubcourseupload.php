@@ -37,7 +37,7 @@ class block_hubcourseupload extends block_base {
      */
     public function init() {
         $this->title = get_string('uploadcoursetohub', 'block_hubcourseupload');
-        $this->version = 2018070900;
+        $this->version = 2018083000;
     }
 
     /**

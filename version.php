@@ -26,5 +26,5 @@
  */
 
 $plugin->component = 'block_hubcourseupload';
-$plugin->version = 2018070900;
+$plugin->version = 2018083000;
 $plugin->requires = 2017111302;

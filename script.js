@@ -25,7 +25,7 @@ require(['jquery'], function ($) {
     $(document).ready(function () {
         var boost = (M.cfg.theme === 'boost');
 
-        var $aside = boost ? $('aside[data-block="hubcourseupload"]') : $('div.block.block_hubcourseupload');
+        var $aside = boost ? $('[data-block="hubcourseupload"]') : $('div.block.block_hubcourseupload');
 
         var $form = $aside.find('form');
         var $filepickercol = $aside.find('*[data-fieldtype="filepicker"]');
@@ -33,7 +33,19 @@ require(['jquery'], function ($) {
         if ($filepickerfieldname.length) {
             $filepickerfieldname.remove();
             $filepickercol.removeClass('col-md-9').addClass('container-fluid');
+        }
 
+        var $formgroup = $form.find('.form-group');
+        if ($formgroup.length) {
+            $formgroup.css('margin-left', '0');
+            $formgroup.css('margin-right', '0');
+        }
+
+        if (!boost) {
+            var $fsubmit = $aside.find('.fsubmit');
+            if ($fsubmit.length) {
+                $fsubmit.css('margin-left', '0');
+            }
         }
 
         var $coursefileinput = $aside.find('input[name="coursefile"]');
