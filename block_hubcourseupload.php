@@ -60,7 +60,8 @@ class block_hubcourseupload extends block_base {
     public function applicable_formats() {
         return array(
             'all' => false,
-            'my' => true
+            'my' => true,
+            'site' => true
         );
     }
 
