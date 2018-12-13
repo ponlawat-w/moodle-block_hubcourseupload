@@ -30,11 +30,11 @@ if ($ADMIN->fulltree) {
 
     $firstid = 0;
     $categories = $DB->get_records('course_categories', ['visible' => 1]);
-    if (count($categories) > 0) {
-        $firstid = $categories[0]->id;
-    }
     $categoriesoptions = [];
     foreach ($categories as $category) {
+        if (!$firstid) {
+            $firstid = $category->id;
+        }
         $categoriesoptions[$category->id] = $category->name;
     }
 
