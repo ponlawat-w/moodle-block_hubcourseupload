@@ -60,7 +60,8 @@ class block_hubcourseupload extends block_base {
     public function applicable_formats() {
         return array(
             'all' => false,
-            'my' => true
+            'my' => true,
+            'site' => true
         );
     }
 
@@ -77,9 +78,9 @@ class block_hubcourseupload extends block_base {
         $this->page->requires->js(new moodle_url('/blocks/hubcourseupload/script.js'));
         $this->page->requires->strings_for_js(['coursefilechoose', 'draganddrop', 'pleasewait'], 'block_hubcourseupload');
 
-        if (!has_capability('block/hubcourseupload:upload', context_user::instance($USER->id))) {
+        if (!$USER->id || !has_capability('block/hubcourseupload:upload', context_user::instance($USER->id))) {
             $this->content = new stdClass();
-            $this->content->text = get_string('nocapability', 'block_hubcourseupload');
+            $this->content->text = get_string($USER->id ? 'nocapability' : 'nosignin', 'block_hubcourseupload');
             $this->context->footer = '';
             return $this->content;
         }

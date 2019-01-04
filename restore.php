@@ -281,13 +281,13 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
             redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
         }
         exit;
-    } catch (Exception $ex) {
-        if (!$versionid) {
-            delete_course($courseid);
-        }
-        fulldelete($extractedpath);
-        fulldelete($archivepath);
-        throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload') . $ex->getMessage());
+//    } catch (Exception $ex) {
+//        if (!$versionid) {
+//            delete_course($courseid);
+//        }
+//        fulldelete($extractedpath);
+//        fulldelete($archivepath);
+//        throw new Exception(get_string('error_cannotrestore', 'block_hubcourseupload') . $ex->getMessage());
     } catch (Error $ex) {
         if (!$versionid) {
             delete_course($courseid);

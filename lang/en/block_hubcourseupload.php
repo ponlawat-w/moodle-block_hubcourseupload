@@ -52,6 +52,7 @@ $string['uploadcoursetohub'] = 'Upload Your Course to Hub';
 $string['coursefilechoose'] = 'Open file browser…';
 $string['draganddrop'] = 'Or you can also drag and drop your <i>.mbz</i> file here…';
 $string['nocapability'] = 'You are not allowed to upload file to hub.';
+$string['nosignin'] = 'Please sign in to upload your course to hub.';
 $string['uploaddescription'] = 'Supported file format: .mbz';
 $string['maxfilesize'] = 'Maximum file size: {$a}MB';
 $string['pleasewait'] = 'Please wait…';

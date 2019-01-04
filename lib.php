@@ -270,6 +270,16 @@ function block_hubcourseupload_reduceinfo($info) {
     return $newinfo;
 }
 
+function block_hubcourseupload_getbackupdir() {
+    global $CFG;
+    $backupdir = $CFG->tempdir . '/backup';
+
+    if (!check_dir_exists($backupdir) && !mkdir($backupdir)) {
+        return null;
+    }
+    return $backupdir;
+}
+
 /**
  * Get backup path
  * @param string $filename
@@ -277,5 +287,6 @@ function block_hubcourseupload_reduceinfo($info) {
  */
 function block_hubcourseupload_getbackuppath($filename) {
     global $CFG;
-    return $CFG->tempdir . '/backup/' . $filename;
+    $backupdir = block_hubcourseupload_getbackupdir();
+    return $backupdir ? "{$backupdir}/{$filename}" : "{$CFG->tempdir}/backup_{$filename}";
 }

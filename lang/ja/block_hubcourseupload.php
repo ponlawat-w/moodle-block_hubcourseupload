@@ -52,6 +52,7 @@ $string['uploadcoursetohub'] = 'あなたのコースをハブにアップロー
 $string['coursefilechoose'] = 'ファイルブラウザーを開く';
 $string['draganddrop'] = 'それともここに「.mbz」ファイルをドロップしてください。';
 $string['nocapability'] = 'ハブにアップロードする権利がありません。';
+$string['nosignin'] = 'ハブにアップロードするのにログインしてください。';
 $string['uploaddescription'] = '対応しるファイルのエクステンション: .mbz';
 $string['maxfilesize'] = 'ファイルの最大サイズ: {$a}MB';
 $string['pleasewait'] = '少々お待ちください。';
