@@ -61,12 +61,12 @@ $string['continueupload'] = '引き続き';
 
 $string['proceedanyway'] = '続く';
 
-$string['warning_moodleversion'] = '<p><strong>注意！</strong>ファイルにあるコースが、このサイトより新しいムードルバージョンから作成されました。このサイトに正しく機能しない恐れがあります。
-<br>続きますか。</p>
+$string['warning_moodleversion'] = '<p><strong>注意！</strong>アップロードされたコースが、このサイトより新しいムードルバージョンから作成されました。このサイトに正しく機能しない可能性があります。
+<br>続けますか。</p>
 <p><strong>コースのムードルバージョン:</strong> <span class="text-success">{$a->original}</span><br>
 <strong>このサイトのムードルバージョン:</strong> <span class="text-danger">{$a->current}</span></p>';
 
-$string['warning_pluginversion'] = '<strong>注意！</strong>ファイルにあるコースが利用しているプラグインは、このサイトのプラグインと異なっています。このサイトでこのコースが正しく動かない恐れがあります。
+$string['warning_pluginversion'] = '<strong>注意！</strong>アップロードされたコースが利用しているプラグインは、このサイトのプラグインと一部異なっています。このサイトでこのコースが正しく動かない可能性があります。
 <br>下記の表を確認してください。';
 $string['requiredplugin_name'] = 'プラグイン名';
 $string['requiredplugin_courseversion'] = 'コースからのバージョン';
