@@ -46,7 +46,7 @@ class pluginconfirm_form extends moodleform {
      * @param array $plugins
      * @param string $data
      */
-    public function __construct($plugins = [], $data = null) {
+    public function __construct($plugins = ['mod' => [], 'blocks' => []], $data = null) {
         $this->plugins = $plugins;
         $this->jsondata = json_encode($data);
         parent::__construct();
@@ -75,6 +75,7 @@ class pluginconfirm_form extends moodleform {
         $form->addElement('html', $text);
         $form->addElement('hidden', 'jsondata', $this->jsondata);
         $form->setDefault('jsondata', $this->jsondata);
+        $form->setType('jsondata', PARAM_RAW);
         $this->add_action_buttons(true, get_string('proceedanyway', 'block_hubcourseupload'));
     }
 }

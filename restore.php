@@ -35,6 +35,9 @@ if (block_hubcourseupload_infoblockenabled()) {
 $systemcontext = context_system::instance();
 $usercontext = context_user::instance($USER->id);
 
+$PAGE->set_context($systemcontext);
+$PAGE->set_url(new moodle_url('/blocks/hubcourseupload/restore.php'));
+
 require_capability('block/hubcourseupload:upload', $usercontext);
 
 $step = optional_param('step', BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE, PARAM_INT);
@@ -64,6 +67,8 @@ if ($versionconfirmform->is_cancelled() || $pluginconfirmform->is_cancelled()) {
 }
 
 $versionconfirmformdata = null;
+$mbzfilename = '';
+
 if ($versionconfirmform->is_submitted()) {
     $versionconfirmformdata = $versionconfirmform->get_jsondata();
     $step = $versionconfirmformdata->step;
@@ -137,7 +142,6 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PREPARE) {
     }
 
     if ($CFG->version < $info->moodle_version) {
-        $PAGE->set_context($systemcontext);
         $PAGE->set_pagelayout('standard');
         $PAGE->set_title(get_string('pluginname', 'block_hubcourseupload'));
         $PAGE->set_heading(get_string('pluginname', 'block_hubcourseupload'));
@@ -175,7 +179,6 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_VERSIONCONFIRMED) {
 
     $plugins = block_hubcourseupload_getplugins($extractedpath);
     if (!block_hubcourseupload_valid($plugins)) {
-        $PAGE->set_context($systemcontext);
         $PAGE->set_pagelayout('standard');
         $PAGE->set_title(get_string('pluginname', 'block_hubcourseupload'));
         $PAGE->set_heading(get_string('pluginname', 'block_hubcourseupload'));
@@ -206,7 +209,7 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
         $plugins = block_hubcourseupload_getplugins($extractedpath);
     }
 
-    if ($version && block_hubcourseupload_infoblockenabled()) {
+    if (isset($version) && $version && block_hubcourseupload_infoblockenabled()) {
         // Apply Version
         $coursecontext = $hubcoursecontext->get_course_context();
         $courseid = $coursecontext->instanceid;

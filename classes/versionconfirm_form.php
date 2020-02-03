@@ -78,6 +78,7 @@ class versionconfirm_form extends moodleform {
         $form->addElement('html', get_string('warning_moodleversion', 'block_hubcourseupload', ['original' => $this->courseversion, 'current' => $this->siteversion]));
         $form->addElement('hidden', 'jsondata', $this->jsondata);
         $form->setDefault('jsondata', $this->jsondata);
+        $form->setType('jsondata', PARAM_RAW);
         $this->add_action_buttons(true, get_string('proceedanyway', 'block_hubcourseupload'));
     }
 }
