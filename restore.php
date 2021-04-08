@@ -251,14 +251,19 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
             new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_EXISTING_DELETING) :
             new restore_controller($extractedname, $courseid, backup::INTERACTIVE_NO, backup::MODE_GENERAL, $USER->id, backup::TARGET_NEW_COURSE);
         $rc->set_status(backup::STATUS_AWAITING);
-        $rc->get_plan()->execute();
+        $plan = $rc->get_plan();
+        if ($plan->setting_exists('skiphubcoursedata')) {
+          $plan->get_setting('skiphubcoursedata')->set_value(true);
+        }
+        $plan->execute();
 
-        $blocks = backup_general_helper::get_blocks_from_path($extractedpath . '/course');
+        // $blocks = backup_general_helper::get_blocks_from_path($extractedpath . '/course');
 
         $rc->destroy();
 
         if ($versionid && block_hubcourseupload_infoblockenabled()) {
             // Apply version
+            block_hubcourseinfo_deleteotherblockinstances($coursecontext->id, true);
             $hubcourse = block_hubcourseinfo_gethubcoursefromcourseid($courseid);
             $hubcourse->stableversion = $version->id;
             $hubcourse->timemodified = time();
@@ -280,9 +285,10 @@ if ($step == BLOCK_HUBCOURSEUPLOAD_STEP_PLUGINCONFIRMED) {
 
         if (block_hubcourseupload_infoblockenabled() && $hubcourseid && !$versionid) {
             redirect(new moodle_url('/blocks/hubcourseinfo/metadata/edit.php', ['id' => $hubcourseid, 'new' => 1]));
-        } else {
-            redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
+            exit;
         }
+        header('location: ' . new moodle_url('/course/view.php', ['id' => $courseid]));
+        // redirect(new moodle_url('/course/view.php', ['id' => $courseid]));
         exit;
 //    } catch (Exception $ex) {
 //        if (!$versionid) {
